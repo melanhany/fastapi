@@ -34,3 +34,11 @@ class Store(Base):
     name = Column(String)
     
     employees = relationship("Employee", back_populates="store")
+
+    
+class OrderStatus(PythonEnum):
+    started = 'started'
+    ended = 'ended'
+    in_process = 'in process'
+    awaiting = 'awaiting'
+    canceled = 'canceled'
