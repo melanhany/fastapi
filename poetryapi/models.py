@@ -6,16 +6,17 @@ from sqlalchemy.sql import func
 
 Base = declarative_base()
 
-class Employee(Base):
-    __tablename__ = "employees"
+
+class Store(Base):
+    __tablename__ = "stores"
     
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(255))
-    phone_number = Column(String(255))
-    store_id = Column(Integer, ForeignKey("stores.id"), nullable=False)
+    name = Column(String)
     
-    store = relationship("Store", back_populates="employees")
-    
+    employees = relationship("Employee", back_populates="store")
+    customers = relationship("Customer", back_populates="store")
+
+
 class Customer(Base):
     __tablename__ = "customers"
     
@@ -25,15 +26,17 @@ class Customer(Base):
     store_id = Column(Integer, ForeignKey("stores.id"), nullable=False)
     
     store = relationship("Store", back_populates="customers")
-
     
-class Store(Base):
-    __tablename__ = "stores"
+    
+class Employee(Base):
+    __tablename__ = "employees"
     
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String)
+    name = Column(String(255))
+    phone_number = Column(String(255))
+    store_id = Column(Integer, ForeignKey("stores.id"), nullable=False)
     
-    employees = relationship("Employee", back_populates="store")
+    store = relationship("Store", back_populates="employees")
 
     
 class OrderStatus(PythonEnum):
