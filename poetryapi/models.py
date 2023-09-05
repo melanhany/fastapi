@@ -27,5 +27,10 @@ class Customer(Base):
     store = relationship("Store", back_populates="customers")
 
     
+class Store(Base):
+    __tablename__ = "stores"
     
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String)
     
+    employees = relationship("Employee", back_populates="store")
