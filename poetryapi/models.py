@@ -58,9 +58,26 @@ class Order(Base):
     store = relationship("Store", back_populates="orders")
     author = relationship("Customer", back_populates="orders")
     executor = relationship("Employee", back_populates="orders")
+    visit = relationship("Visit", back_populates="order", uselist=False)
     
     # Set up an event listener to update closed_at when is_closed becomes True
     @staticmethod
     def _update_closed_at(mapper, connection, target):
         if target.status in (OrderStatus.ended, OrderStatus.canceled) and target.closed_at is None:
             target.closed_at = func.now()
+
+class Visit(Base):
+    __tablename__ = "visits"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    order_id = Column(Integer, ForeignKey("orders.id"), unique=True)
+    executor_id = Column(Integer, ForeignKey("employees.id"))
+    author_id = Column(Integer, ForeignKey("customers.id"))
+    store_id = Column(Integer, ForeignKey("stores.id"))
+    
+    order = relationship("Order", back_populates="visit")
+    executor = relationship("Employee", back_populates="visits")
+    author = relationship("Customer", back_populates="visits")
+    store = relationship("Store", back_populates="visits")
+    
