@@ -13,7 +13,9 @@ class Store(Base):
     
     employees = relationship("Employee", back_populates="store")
     customers = relationship("Customer", back_populates="store")
-
+    orders = relationship("Order", back_populates="store")
+    visits = relationship("Visit", back_populates="store")
+    
 
 class Customer(Base):
     __tablename__ = "customers"
@@ -24,6 +26,8 @@ class Customer(Base):
     store_id = Column(Integer, ForeignKey("stores.id"), nullable=False)
     
     store = relationship("Store", back_populates="customers")
+    orders = relationship("Order", back_populates="author")
+    visits = relationship("Visit", back_populates="author")
     
     
 class Employee(Base):
@@ -35,6 +39,8 @@ class Employee(Base):
     store_id = Column(Integer, ForeignKey("stores.id"), nullable=False)
     
     store = relationship("Store", back_populates="employees")
+    orders = relationship("Order", back_populates="executor")
+    visits = relationship("Visit", back_populates="executor")
 
     
 class OrderStatus(PythonEnum):
