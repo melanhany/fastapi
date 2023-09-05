@@ -42,3 +42,25 @@ class OrderStatus(PythonEnum):
     in_process = 'in process'
     awaiting = 'awaiting'
     canceled = 'canceled'
+
+    
+class Order(Base):
+    __tablename__ = "orders"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    closed_at = Column(DateTime(timezone=True))
+    store_id = Column(Integer, ForeignKey("stores.id"))
+    author_id = Column(Integer, ForeignKey("customers.id"))
+    executor_id = Column(Integer, ForeignKey("employees.id"))
+    status = Column(Enum(OrderStatus), default=OrderStatus.awaiting)
+    
+    store = relationship("Store", back_populates="orders")
+    author = relationship("Customer", back_populates="orders")
+    executor = relationship("Employee", back_populates="orders")
+    
+    # Set up an event listener to update closed_at when is_closed becomes True
+    @staticmethod
+    def _update_closed_at(mapper, connection, target):
+        if target.status in (OrderStatus.ended, OrderStatus.canceled) and target.closed_at is None:
+            target.closed_at = func.now()
