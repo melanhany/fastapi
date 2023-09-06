@@ -1,6 +1,6 @@
 from fastapi import HTTPException
 from pydantic import BaseModel, validator
-from typing import Union
+from typing import Union, Optional
 from enum import Enum as PythonEnum
 from datetime import datetime
 
@@ -19,7 +19,8 @@ class OrderCreate(OrderBase):
     pass
 
 class OrderUpdate(OrderBase):
-    pass
+    store_id: Optional[int] = None
+    executor_id: Optional[int] = None
 
 class OrderStatusUpdate(BaseModel):
     status: OrderStatus

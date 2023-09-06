@@ -1,4 +1,5 @@
 from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
 from . import crud, schemas
 from .database import SessionLocal, engine
@@ -57,6 +58,44 @@ def get_order_for_customer(
     return order
 
 
+@app.put("/orders/{order_id}", response_model=schemas.Order)
+def update_order_for_customer(
+    order_id: int,
+    updated_order: schemas.OrderUpdate,
+    phone_number: str = Depends(validate_customer_phone), 
+    db: Session=Depends(get_db)    
+):
+    order = crud.get_order_by_customer_phone(db, phone_number, order_id)
+    if order is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Order not found")
+    
+    customer = crud.get_customer_by_phone(db, phone_number)
+    if not customer:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Customer not found")
+
+    author_id = customer.id    
+    store_by_customer = crud.get_store_by_author(db, author_id)
+    store_by_executor = crud.get_store_by_executor(db, updated_order.executor_id)
+    if updated_order.store_id:
+        if updated_order.store_id != store_by_customer.id:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Customer can update order only for his store")
+        
+        if store_by_executor is None or updated_order.store_id != store_by_executor.id:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Customer can update order with executor prescribed only for his store")
+    else:
+        if store_by_executor is None or order.store_id != store_by_executor.id:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Customer can update order with executor prescribed only for his store")
+        
+        
+    for field, value in updated_order.model_dump(exclude_unset=True).items():
+        setattr(order, field, value)
+        
+    db.commit()
+    db.refresh(order)
+
+    return order
+
+    
 @app.post("/orders/", response_model=schemas.Order)
 def create_order_for_customer(
     order: schemas.OrderCreate, 
@@ -73,8 +112,7 @@ def create_order_for_customer(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Customer can create order only for his store")
     
     store_by_executor = crud.get_store_by_executor(db, order.executor_id)
-    if order.store_id != store_by_executor.id:
+    if store_by_executor is None or order.store_id != store_by_executor.id:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Customer can create order with executor prescribed only for his store")
     
     return crud.create_customer_order(db, order, author_id)
-
