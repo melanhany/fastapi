@@ -50,8 +50,19 @@ def create_order_for_customer(
     db: Session = Depends(get_db)
 ):
     customer = crud.get_customer_by_phone(db, phone_number)
-    customer_id = customer.id
     
+    if not customer:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Customer not found")
+
+    author_id = customer.id    
+    store_by_customer = crud.get_store_by_author(db, author_id)
     
+    if order.store_id != store_by_customer.id:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Customer can create order only for his store")
     
-    return crud.create_customer_order(db, order, customer_id)
+    store_by_executor = crud.get_store_by_executor(db, order.executor_id)
+    
+    if order.store_id != store_by_executor.id:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Customer can create order with executor prescribed only for his store")
+    
+    return crud.create_customer_order(db, order, author_id)
