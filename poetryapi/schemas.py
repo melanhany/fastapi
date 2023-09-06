@@ -1,8 +1,8 @@
-from pydantic import BaseModel, Enum as PydanticEnum
-from typing import Optional
+from pydantic import BaseModel
+from enum import Enum as PythonEnum
 from datetime import datetime
 
-class OrderStatus(PydanticEnum):
+class OrderStatus(PythonEnum):
     started = 'started'
     ended = 'ended'
     in_process = 'in process'

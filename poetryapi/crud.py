@@ -1,6 +1,8 @@
 from sqlalchemy.orm import Session
 from . import models, schemas
 
+
+
 def get_stores_by_employee_phone(db: Session, phone_number: str):
     return db.query(models.Store) \
                 .join(models.Employee) \
@@ -15,3 +17,9 @@ def get_customer(db: Session, customer_id: int):
 def get_customer_by_phone(db: Session, phone_number: str):
     return db.query(models.Customer) \
                 .filter(models.Customer.phone_number == phone_number).first()
+
+def get_orders_by_customer_phone(db: Session, phone_number: str):
+    return db.query(models.Order) \
+                .join(models.Customer) \
+                .filter(models.Customer.phone_number == phone_number) \
+                .all()
