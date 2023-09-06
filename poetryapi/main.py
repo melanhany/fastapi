@@ -1,7 +1,6 @@
-from typing import Annotated, Union
-from fastapi import Depends, FastAPI, HTTPException, Query
+from fastapi import Depends, FastAPI, HTTPException
 from sqlalchemy.orm import Session
-from . import crud, models, schemas
+from . import crud, schemas
 from .database import SessionLocal, engine
 
 app = FastAPI()
@@ -17,16 +16,10 @@ def get_db():
 def read_root():
     return {"message": "Hello World!"}
 
-
-@app.get("/items/{item_id}")
-def read_item(item_id: int, q: Union[str, None] = None):
-    return {"item_id": item_id, "q": q}
-
-@app.get("/stores/")
+@app.get("/stores/", response_model=list[schemas.Store])
 def get_stores_for_employee(
     phone_number: str, 
-    db: Session=Depends(get_db),
-    response_model=list[schemas.Store] 
+    db: Session=Depends(get_db)
 ):
     stores = crud.get_stores_by_employee_phone(db=db, phone_number=phone_number)
 
