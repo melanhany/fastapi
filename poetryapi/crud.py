@@ -11,6 +11,18 @@ def get_stores_by_employee_phone(db: Session, phone_number: str):
                 .join(models.Employee) \
                 .filter(models.Employee.phone_number == phone_number) \
                 .all()
+                
+def get_store_by_author(db: Session, author_id: int):
+    return db.query(models.Store) \
+                .join(models.Customer) \
+                .filter(models.Customer.id == author_id) \
+                .first()
+
+def get_store_by_executor(db: Session, executor_id: int):
+    return db.query(models.Store) \
+                .join(models.Employee) \
+                .filter(models.Employee.id == executor_id) \
+                .first()
 
 def get_customer(db: Session, customer_id: int):
     return db.query(models.Customer) \
@@ -27,6 +39,11 @@ def get_orders_by_customer_phone(db: Session, phone_number: str):
                 .join(models.Customer) \
                 .filter(models.Customer.phone_number == phone_number) \
                 .all()
+
+def get_store(db: Session, store_id: int):
+    return db.query(models.Store) \
+                .filter(models.Store.id == store_id) \
+                .first()
                 
 def create_customer_order(db: Session, order: schemas.OrderCreate, customer_id: int):
     db_order = models.Order(**order.model_dump(), author_id=customer_id)
@@ -34,3 +51,4 @@ def create_customer_order(db: Session, order: schemas.OrderCreate, customer_id: 
     db.commit()
     db.refresh(db_order)
     return db_order
+
