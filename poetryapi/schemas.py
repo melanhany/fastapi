@@ -1,8 +1,10 @@
-from pydantic import BaseModel
+from fastapi import HTTPException
+from pydantic import BaseModel, validator
+from typing import Union
 from enum import Enum as PythonEnum
 from datetime import datetime
 
-class OrderStatus(PythonEnum):
+class OrderStatus(str, PythonEnum):
     started = 'started'
     ended = 'ended'
     in_process = 'in process'
@@ -25,7 +27,7 @@ class OrderStatusUpdate(BaseModel):
 class Order(OrderBase):
     id: int
     created_at: datetime
-    closed_at: datetime
+    closed_at: Union[datetime, None] = None 
     author_id: int
     status: OrderStatus
 
@@ -36,9 +38,7 @@ class EmployeeBase(BaseModel):
     
 class Employee(EmployeeBase):
     id: int
-    store_id: int
-    # orders: list[Order] = []
-    
+
 
 class StoreBase(BaseModel):
     name: str
