@@ -32,6 +32,23 @@ class Order(OrderBase):
     author_id: int
     status: OrderStatus
 
+class VisitBase(BaseModel):
+    store_id: int
+    executor_id: int
+    order_id: int
+    
+class VisitCreate(VisitBase):
+    pass
+
+class VisitUpdate(VisitBase):
+    store_id: Optional[int] = None
+    executor_id: Optional[int] = None
+    order_id: Optional[int] = None
+
+class Visit(VisitBase):
+    id: int
+    created_at: datetime
+    author_id: int
     
 class EmployeeBase(BaseModel):
     name: str

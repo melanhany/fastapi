@@ -18,6 +18,9 @@ def get_db():
 def read_root():
     return {"message": "Hello World!"}
 
+"""
+Listing all stores for given employee
+"""
 @app.get("/stores/", response_model=list[schemas.Store])
 def get_stores_for_employee(
     phone_number: str = Depends(validate_employee_phone), 
@@ -31,10 +34,12 @@ def get_stores_for_employee(
 
     return stores
 
+"""
+CRUD endpoints for orders 
+"""
 @app.get("/orders/", response_model=list[schemas.Order])
 def get_orders_for_customer(
-    phone_number: str = Depends(validate_customer_phone),
-    skip: int = 0, limit: int = 100,  
+    phone_number: str = Depends(validate_customer_phone),  
     db: Session=Depends(get_db)
 ):
     orders = crud.get_orders_by_customer_phone(db, phone_number)
@@ -153,3 +158,59 @@ def create_order_for_customer(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Customer can create order with executor prescribed only for his store")
     
     return crud.create_customer_order(db, order, author_id)
+
+"""
+CRUD endpoints for visits
+"""
+@app.get("/visits/", response_model=list[schemas.Visit])
+def get_visits_for_customer(
+    phone_number: str = Depends(validate_customer_phone),
+    db: Session=Depends(get_db)
+):
+    visits = crud.get_visits_by_customer_phone(db, phone_number)
+    
+    if not visits:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, 
+                            detail="No visits found for the provided customer phone number")
+        
+    return visits
+
+@app.get("/visits/{visit_id}", response_model=schemas.Visit)
+def get_visit_for_customer(
+    visit_id: int,
+    phone_number: str = Depends(validate_customer_phone), 
+    db: Session=Depends(get_db)
+):
+    visit = crud.get_visit_by_customer_phone(db, phone_number, visit_id)
+    if visit is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Order not found")
+    
+    return visit
+
+@app.post("/visits/", response_model=schemas.Visit)
+def create_visit_for_customer(
+    visit: schemas.VisitCreate, 
+    phone_number: str = Depends(validate_customer_phone), 
+    db: Session = Depends(get_db)
+):
+    customer = crud.get_customer_by_phone(db, phone_number)
+    if not customer:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Customer not found")
+
+    author_id = customer.id
+    store_by_customer = crud.get_store_by_author(db, author_id)
+    if visit.store_id != store_by_customer.id:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Customer can create visit only for his store")
+    
+    customer_order = crud.get_customer_order(db, author_id, visit.order_id)
+    if customer_order is None:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Customer can create visit only for his order")
+    
+    order = crud.get_order_by_customer_phone(db, phone_number, visit.order_id)
+    if order.visit:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Customer can create visit for his order that doesn't already have visit")     
+    
+    if order.executor == visit.executor_id:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Customer can create visit with executor prescribed only for his order")
+    
+    return crud.create_customer_visit(db, visit, author_id)

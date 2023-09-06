@@ -66,3 +66,26 @@ def delete_order(db: Session, order_id: int):
         db.commit()
 
 
+def get_visits_by_customer_phone(db: Session, phone_number: str):
+    return db.query(models.Visit) \
+                .join(models.Customer) \
+                .filter(models.Customer.phone_number == phone_number) \
+                .all()
+def get_visit_by_customer_phone(db: Session, phone_number: str, visit_id: int):
+    return db.query(models.Visit) \
+                .join(models.Customer) \
+                .filter(models.Customer.phone_number == phone_number) \
+                .filter(models.Visit.id == visit_id) \
+                .first()
+def get_customer_order(db: Session, customer_id: int, order_id: int):
+    return db.query(models.Customer) \
+                .join(models.Order) \
+                .filter(models.Customer.id == customer_id) \
+                .filter(models.Order.id == order_id) \
+                .first()
+def create_customer_visit(db: Session, visit: schemas.VisitCreate, customer_id: int):
+    db_visit = models.Visit(**visit.model_dump(), author_id=customer_id)
+    db.add(db_visit)
+    db.commit()
+    db.refresh(db_visit)
+    return db_visit
