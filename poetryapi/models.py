@@ -43,7 +43,7 @@ class Employee(Base):
     visits = relationship("Visit", back_populates="executor")
 
     
-class OrderStatus(PythonEnum):
+class OrderStatus(str, PythonEnum):
     started = 'started'
     ended = 'ended'
     in_process = 'in process'
