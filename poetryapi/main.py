@@ -199,7 +199,7 @@ def create_visit_for_customer(
 
     author_id = customer.id
     store_by_customer = crud.get_store_by_author(db, author_id)
-    if visit.store_id != store_by_customer.id:
+    if visit.store_id != store_by_customer:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Customer can create visit only for his store")
     
     customer_order = crud.get_customer_order(db, author_id, visit.order_id)
@@ -210,7 +210,64 @@ def create_visit_for_customer(
     if order.visit:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Customer can create visit for his order that doesn't already have visit")     
     
-    if order.executor == visit.executor_id:
+    if order.executor != visit.executor_id:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Customer can create visit with executor prescribed only for his order")
     
     return crud.create_customer_visit(db, visit, author_id)
+
+@app.put("/visits/{visit_id}", response_model=schemas.Visit)
+def update_visit_for_customer(
+    visit_id: int,
+    updated_visit: schemas.VisitUpdate,
+    phone_number: str = Depends(validate_customer_phone), 
+    db: Session=Depends(get_db)    
+):
+    visit = crud.get_visit_by_customer_phone(db, phone_number, visit_id)
+    if visit is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Visit not found")
+    
+    customer = crud.get_customer_by_phone(db, phone_number)
+    if not customer:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Customer not found")
+
+    author_id = customer.id
+    store_by_customer = crud.get_store_by_author(db, author_id)
+    order = crud.get_order_by_customer_phone(db, phone_number, visit.order_id)
+    if updated_visit.store_id:
+        if updated_visit.store_id != store_by_customer.id:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Customer can update visit only for his store")
+    if updated_visit.order_id:    
+        customer_order = crud.get_customer_order(db, author_id, updated_visit.order_id)
+        
+        if customer_order is None:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Customer can create visit only for his order")
+        
+        if order.visit:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Customer can create visit for his order that doesn't already have visit")     
+        
+        if order.executor != updated_visit.executor_id:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Customer can create visit with executor prescribed only for his order")
+
+    
+    for field, value in updated_visit.model_dump(exclude_unset=True).items():
+        setattr(visit, field, value)
+        
+    db.commit()
+    db.refresh(visit)
+
+    return visit
+
+@app.delete("/visits/{visit_id}", response_model=schemas.Visit)
+def delete_visit(
+    visit_id: int, 
+    phone_number: str = Depends(validate_customer_phone), 
+    db: Session = Depends(get_db)
+):
+    visit = crud.get_visit_by_customer_phone(db, phone_number, visit_id)
+    
+    if not visit:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Visit not found")
+    
+    crud.delete_visit(db, visit_id)
+    
+    return visit

@@ -89,3 +89,9 @@ def create_customer_visit(db: Session, visit: schemas.VisitCreate, customer_id: 
     db.commit()
     db.refresh(db_visit)
     return db_visit
+def delete_visit(db: Session, visit_id: int):
+    visit = db.query(models.Visit).filter(models.Visit.id == visit_id).first()
+    
+    if visit:
+        db.delete(visit)
+        db.commit()
