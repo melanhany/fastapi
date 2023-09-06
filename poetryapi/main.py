@@ -42,3 +42,12 @@ def get_orders_for_customer(
                             detail="No orders found for the provided customer phone number")
         
     return orders
+
+@app.post("/orders/", response_model=schemas.Order)
+def create_order_for_customer(
+    order: schemas.OrderCreate, 
+    phone_number: str = Depends(validate_customer_phone), 
+    db: Session = Depends(get_db)
+):
+    
+    return crud.create_customer_order(db, order, phone_number)
