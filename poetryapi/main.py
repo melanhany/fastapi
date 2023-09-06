@@ -110,6 +110,29 @@ def delete_order(
     
     return order
     
+@app.patch("/orders/{order_id}", response_model=schemas.Order)
+def update_order_status(
+    order_id: int,
+    updated_order: schemas.OrderStatusUpdate,
+    phone_number: str = Depends(validate_customer_phone), 
+    db: Session=Depends(get_db)  
+):
+    order = crud.get_order_by_customer_phone(db, phone_number, order_id)
+    if order is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Order not found")
+    
+    customer = crud.get_customer_by_phone(db, phone_number)
+    if not customer:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Customer not found")
+
+    for field, value in updated_order.model_dump().items():
+        setattr(order, field, value)
+        
+    db.commit()
+    db.refresh(order)
+
+    return order
+
 @app.post("/orders/", response_model=schemas.Order)
 def create_order_for_customer(
     order: schemas.OrderCreate, 

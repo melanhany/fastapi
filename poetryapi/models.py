@@ -1,5 +1,5 @@
 from enum import Enum as PythonEnum
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Enum
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Enum, event
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from .database import Base
@@ -67,11 +67,11 @@ class Order(Base):
     executor = relationship("Employee", back_populates="orders")
     visit = relationship("Visit", back_populates="order", uselist=False)
     
-    # Set up an event listener to update closed_at when is_closed becomes True
-    @staticmethod
-    def _update_closed_at(mapper, connection, target):
-        if target.status in (OrderStatus.ended, OrderStatus.canceled) and target.closed_at is None:
-            target.closed_at = func.now()
+@event.listens_for(Order.status, 'set')
+def _update_closed_at(target, value, oldvalue, initiator):
+    if value in (OrderStatus.ended, OrderStatus.canceled) and target.closed_at is None:
+        target.closed_at = func.now()
+
 
 class Visit(Base):
     __tablename__ = "visits"
