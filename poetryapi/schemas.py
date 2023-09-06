@@ -2,24 +2,32 @@ from pydantic import BaseModel, Enum as PydanticEnum
 from typing import Optional
 from datetime import datetime
 
-# class OrderStatus(PydanticEnum):
-#     started = 'started'
-#     ended = 'ended'
-#     in_process = 'in process'
-#     awaiting = 'awaiting'
-#     canceled = 'canceled'
+class OrderStatus(PydanticEnum):
+    started = 'started'
+    ended = 'ended'
+    in_process = 'in process'
+    awaiting = 'awaiting'
+    canceled = 'canceled'
 
-# class OrderBase(BaseModel):
-#     status: OrderStatus
+class OrderBase(BaseModel):
+    store_id: int
+    executor_id: int
     
-# class OrderCreate(OrderBase):
-#     store_id: Optional[int]
-#     author_id: Optional[int]
-#     executor_id: Optional[int]
-#     status    
+class OrderCreate(OrderBase):
+    pass
 
-# class Order(OrderBase):
-#     id: int
+class OrderUpdate(OrderBase):
+    pass
+
+class OrderStatusUpdate(BaseModel):
+    status: OrderStatus
+
+class Order(OrderBase):
+    id: int
+    created_at: datetime
+    closed_at: datetime
+    author_id: int
+    status: OrderStatus
 
     
 class EmployeeBase(BaseModel):
