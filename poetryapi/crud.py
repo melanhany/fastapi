@@ -27,3 +27,13 @@ def get_orders_by_customer_phone(db: Session, phone_number: str):
                 .join(models.Customer) \
                 .filter(models.Customer.phone_number == phone_number) \
                 .all()
+                
+def create_customer_order(db: Session, order: schemas.OrderCreate, customer_phone: str):
+    customer = db.query(models.Customer) \
+                    .filter(models.Customer.phone_number == customer_phone) \
+                    .first()
+    db_order = models.Order(**order.model_dump(), author_id=customer.id)
+    db.add(db_order)
+    db.commit()
+    db.refresh(db_order)
+    return db_order
