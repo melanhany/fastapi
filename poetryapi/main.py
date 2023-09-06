@@ -95,6 +95,20 @@ def update_order_for_customer(
 
     return order
 
+@app.delete("/orders/{order_id}", response_model=schemas.Order)
+def delete_order(
+    order_id: int, 
+    phone_number: str = Depends(validate_customer_phone), 
+    db: Session = Depends(get_db)
+):
+    order = crud.get_order_by_customer_phone(db, phone_number, order_id)
+    
+    if not order:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Order not found")
+    
+    crud.delete_order(db, order_id)
+    
+    return order
     
 @app.post("/orders/", response_model=schemas.Order)
 def create_order_for_customer(

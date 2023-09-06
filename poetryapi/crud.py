@@ -58,3 +58,11 @@ def create_customer_order(db: Session, order: schemas.OrderCreate, customer_id: 
     db.refresh(db_order)
     return db_order
 
+def delete_order(db: Session, order_id: int):
+    order = db.query(models.Order).filter(models.Order.id == order_id).first()
+    
+    if order:
+        db.delete(order)
+        db.commit()
+
+
