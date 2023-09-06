@@ -32,7 +32,8 @@ def get_stores_for_employee(
 
 @app.get("/orders/", response_model=list[schemas.Order])
 def get_orders_for_customer(
-    phone_number: str = Depends(validate_customer_phone), 
+    phone_number: str = Depends(validate_customer_phone),
+    skip: int = 0, limit: int = 100,  
     db: Session=Depends(get_db)
 ):
     orders = crud.get_orders_by_customer_phone(db, phone_number)
@@ -43,6 +44,19 @@ def get_orders_for_customer(
         
     return orders
 
+@app.get("/orders/{order_id}", response_model=schemas.Order)
+def get_order_for_customer(
+    order_id: int,
+    phone_number: str = Depends(validate_customer_phone), 
+    db: Session=Depends(get_db)
+):
+    order = crud.get_order_by_customer_phone(db, phone_number, order_id)
+    if order is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Order not found")
+    
+    return order
+
+
 @app.post("/orders/", response_model=schemas.Order)
 def create_order_for_customer(
     order: schemas.OrderCreate, 
@@ -50,19 +64,17 @@ def create_order_for_customer(
     db: Session = Depends(get_db)
 ):
     customer = crud.get_customer_by_phone(db, phone_number)
-    
     if not customer:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Customer not found")
 
     author_id = customer.id    
     store_by_customer = crud.get_store_by_author(db, author_id)
-    
     if order.store_id != store_by_customer.id:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Customer can create order only for his store")
     
     store_by_executor = crud.get_store_by_executor(db, order.executor_id)
-    
     if order.store_id != store_by_executor.id:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Customer can create order with executor prescribed only for his store")
     
     return crud.create_customer_order(db, order, author_id)
+

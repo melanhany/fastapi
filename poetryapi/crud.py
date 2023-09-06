@@ -39,6 +39,12 @@ def get_orders_by_customer_phone(db: Session, phone_number: str):
                 .join(models.Customer) \
                 .filter(models.Customer.phone_number == phone_number) \
                 .all()
+def get_order_by_customer_phone(db: Session, phone_number: str, order_id: int):
+    return db.query(models.Order) \
+                .join(models.Customer) \
+                .filter(models.Customer.phone_number == phone_number) \
+                .filter(models.Order.id == order_id) \
+                .first()
 
 def get_store(db: Session, store_id: int):
     return db.query(models.Store) \
