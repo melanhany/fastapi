@@ -49,5 +49,9 @@ def create_order_for_customer(
     phone_number: str = Depends(validate_customer_phone), 
     db: Session = Depends(get_db)
 ):
+    customer = crud.get_customer_by_phone(db, phone_number)
+    customer_id = customer.id
     
-    return crud.create_customer_order(db, order, phone_number)
+    
+    
+    return crud.create_customer_order(db, order, customer_id)
