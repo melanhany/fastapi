@@ -14,6 +14,7 @@ psycopg2-binary = "^2.9.7"
 python-dotenv = "^1.0.0"
 asyncpg = "^0.28.0"
 sqlalchemy = {extras = ["asyncio"], version = "^2.0.20"}
+black = "^23.7.0"
 
 
 [tool.poetry.group.test.dependencies]
